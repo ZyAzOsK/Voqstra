@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voqstra — Digital Art Interface</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400;1,700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Fibonacci spacing sequence */
+      --sp-1: 8px;
+      --sp-2: 13px;
+      --sp-3: 21px;
+      --sp-4: 34px;
+      --sp-5: 55px;
+      --sp-6: 89px;
+      
+      --glass-bg: rgba(255, 255, 255, 0.02);
+      --glass-blur: blur(24px);
+      --brutal-border: 2px solid #fff;
+    }
+
+    body {
+      font-family: 'Space Mono', monospace;
+      background: radial-gradient(circle at 30% 20%, #150a21 0%, #030305 70%);
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Hero Typography Background */
+    .hero-total-bg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Playfair Display', serif;
+      font-size: 35vw;
+      font-weight: 700;
+      color: rgba(255, 255, 255, 0.02);
+      z-index: -1;
+      pointer-events: none;
+      line-height: 0.8;
+      text-align: center;
+    }
+
+    /* Dashboard 3D Wrapper */
+    .dashboard-wrapper {
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transform-origin: left center;
+      padding: var(--sp-5) var(--sp-4);
+      min-height: 100vh;
+      perspective: 1500px;
+    }
+    
+    .dashboard-wrapper.shifted {
+      transform: rotateY(5deg) scale(0.92) translateX(-2%);
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    /* Floating Data Constellation */
+    .metrics-constellation {
+      position: fixed;
+      top: var(--sp-4);
+      right: var(--sp-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
+      z-index: 10;
+      align-items: flex-end;
+    }
+
+    .pill {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: var(--sp-1) var(--sp-3);
+      border-radius: 999px;
+      font-size: 10px;
+      letter-spacing: 2px;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-2);
+    }
+    .pill span { font-weight: 700; font-size: 14px; }
+
+    /* Fluid Feed (Masonry) */
+    .header-block {
+      margin-bottom: var(--sp-6);
+    }
+    .header-block h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: 4rem;
+      font-style: italic;
+      font-weight: 400;
+      line-height: 1;
+      margin-bottom: var(--sp-3);
+    }
+
+    .masonry-feed {
+      column-count: 3;
+      column-gap: var(--sp-4);
+    }
+    @media (max-width: 1200px) { .masonry-feed { column-count: 2; } }
+    @media (max-width: 768px) { .masonry-feed { column-count: 1; } }
+
+    .organic-block {
+      break-inside: avoid;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: var(--brutal-border);
+      margin-bottom: var(--sp-4);
+      position: relative;
+      transition: background 0.3s;
+    }
+    .organic-block:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .call-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      line-height: 1.05;
+      margin-bottom: var(--sp-3);
+      word-break: break-word;
+    }
+
+    .data-point {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      opacity: 0.6;
+      margin-bottom: var(--sp-1);
+    }
+    .data-point span { color: #fff; opacity: 1; font-weight: 700; }
+
+    .handwritten-status {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.4rem;
+      color: #c084fc;
+      position: absolute;
+      top: var(--sp-2);
+      right: var(--sp-3);
+    }
+
+    .tilted-btn {
+      background: #fff;
+      color: #000;
+      border: 2px solid #000;
+      padding: var(--sp-2) var(--sp-3);
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      text-transform: uppercase;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: var(--sp-4);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .tilted-btn:hover { transform: scale(1.1) !important; }
+
+    /* Side-Slide Panel */
+    .side-panel {
+      position: fixed;
+      top: 0;
+      right: -45vw;
+      width: 40vw;
+      height: 100vh;
+      background: rgba(12, 6, 22, 0.6);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border-left: var(--brutal-border);
+      transition: right 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      padding: var(--sp-6) var(--sp-5);
+      overflow-y: auto;
+      z-index: 100;
+    }
+    @media (max-width: 1024px) {
+      .side-panel { width: 60vw; right: -65vw; }
+    }
+    @media (max-width: 640px) {
+      .side-panel { width: 90vw; right: -95vw; }
+    }
+    
+    .side-panel.open { right: 0; }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      font-family: 'Space Mono', monospace;
+      font-size: 14px;
+      cursor: pointer;
+      position: absolute;
+      top: var(--sp-4);
+      right: var(--sp-4);
+      text-transform: uppercase;
+      text-decoration: line-through;
+      opacity: 0.5;
+    }
+    .close-btn:hover { opacity: 1; }
+
+    .panel-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      line-height: 1;
+      margin-bottom: var(--sp-5);
+      font-style: italic;
+    }
+
+    .detail-group {
+      margin-bottom: var(--sp-4);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: var(--sp-3);
+    }
+    .detail-label {
+      font-size: 10px;
+      letter-spacing: 2px;
+      opacity: 0.5;
+      margin-bottom: var(--sp-1);
+    }
+    .detail-value {
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    
+    .annotation {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      color: #c084fc;
+      font-size: 1.2rem;
+    }
+
+    .transcript-box {
+      font-size: 12px;
+      line-height: 1.7;
+      opacity: 0.8;
+      max-height: 300px;
+      overflow-y: auto;
+      margin-top: var(--sp-2);
+      white-space: pre-wrap;
+      padding-right: var(--sp-2);
+    }
+
+    .spinner {
+      width: 21px; height: 21px;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Custom Sleek Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+  </style>
+</head>
+<body>
+
+<div class="hero-total-bg" id="totalCallsBg">0</div>
+
+<div class="metrics-constellation">
+  <div class="pill">Completed <span id="doneCalls">0</span></div>
+  <div class="pill">Processing <span id="queueJobs">0</span></div>
+  <div class="pill">Failed <span id="failedCalls">0</span></div>
+  <div class="pill">Follow-ups <span id="followupCount">0</span></div>
+</div>
+
+<div class="dashboard-wrapper" id="dashboardWrapper">
+  <div class="header-block">
+    <h1>Conversations</h1>
+    <div class="data-point">System Status: <span id="apiStatus">Connecting...</span></div>
+  </div>
+
+  <div class="masonry-feed" id="callsFeed">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<div class="side-panel" id="sidePanel">
+  <button class="close-btn" onclick="closeModal()">Close</button>
+  <div id="modalBody">
+    <div class="spinner"></div>
+  </div>
+</div>
+
+<script>
+  const API = '';
+
+  async function loadData() {
+    try {
+      const [callsRes, healthRes] = await Promise.all([
+        fetch(`${API}/api/calls`),
+        fetch(`${API}/api/calls/health`),
+      ]);
+
+      const callsData = await callsRes.json();
+      const health = await healthRes.json();
+
+      document.getElementById('apiStatus').innerHTML = 'LIVE';
+      document.getElementById('apiStatus').style.color = '#10b981';
+
+      const calls = callsData.calls || [];
+      const done = calls.filter(c => c.status === 'done').length;
+      const failed = calls.filter(c => c.status === 'failed').length;
+      const followups = calls.reduce((acc, c) => acc + parseInt(c.followup_count || 0), 0);
+
+      document.getElementById('totalCallsBg').textContent = calls.length;
+      document.getElementById('doneCalls').textContent = done;
+      document.getElementById('queueJobs').textContent = (health.queue?.waiting || 0) + (health.queue?.active || 0);
+      document.getElementById('failedCalls').textContent = failed;
+      document.getElementById('followupCount').textContent = followups;
+
+      const feed = document.getElementById('callsFeed');
+      if (calls.length === 0) {
+        feed.innerHTML = `<div class="organic-block" style="padding: var(--sp-4);">No transmissions received yet.</div>`;
+      } else {
+        feed.innerHTML = calls.map((c, i) => {
+          // Organic variations
+          const tilt = i % 2 === 0 ? 'rotate(-3deg)' : 'rotate(4deg)';
+          const statusTilt = i % 3 === 0 ? 'rotate(5deg)' : 'rotate(-2deg)';
+          const radius = i % 2 === 0 ? '0 40px 0 0' : '0 0 0 40px';
+          const pad = i % 3 === 0 ? 'var(--sp-5) var(--sp-4)' : 'var(--sp-4)';
+          const handwritten = c.status === 'done' ? 'processed' : c.status;
+
+          return `
+            <div class="organic-block" style="border-radius: ${radius}; padding: ${pad};">
+              <div class="handwritten-status" style="transform: ${statusTilt}">${handwritten}</div>
+              <div class="call-title">${esc(c.customer_name)}</div>
+              <div class="data-point">Ident: <span>${esc(c.customer_email)}</span></div>
+              <div class="data-point">Sentiment: <span>${c.sentiment || 'Analyzing...'}</span></div>
+              <div class="data-point">Action: <span>${c.needs_followup ? 'Required' : 'None'}</span></div>
+              <div class="data-point">Log: <span>${formatTime(c.created_at)}</span></div>
+              <button class="tilted-btn" style="transform: ${tilt}" onclick="showDetail('${c.id}')">Examine Data</button>
+            </div>
+          `;
+        }).join('');
+      }
+    } catch (err) {
+      document.getElementById('apiStatus').innerHTML = 'OFFLINE';
+      document.getElementById('apiStatus').style.color = '#ef4444';
+    }
+  }
+
+  async function showDetail(id) {
+    document.getElementById('dashboardWrapper').classList.add('shifted');
+    document.getElementById('sidePanel').classList.add('open');
+    document.getElementById('modalBody').innerHTML = '<div class="spinner"></div>';
+
+    try {
+      const res = await fetch(`${API}/api/calls/${id}`);
+      const data = await res.json();
+      const { call, insights, messages } = data;
+
+      const actionText = insights?.action_items
+        ? (Array.isArray(insights.action_items) ? insights.action_items : JSON.parse(insights.action_items))
+            .map(a => `<div style="margin-bottom:4px">- ${esc(a)}</div>`).join('')
+        : '<span style="opacity:0.5">None recorded</span>';
+
+      const msgHtml = messages.length > 0
+        ? messages.map(m => `
+            <div style="margin-top:var(--sp-2)">
+              <div class="annotation">dispatched to ${esc(m.recipient_email)}</div>
+              ${m.preview_url ? `<a href="${m.preview_url}" target="_blank" style="color:#fff; font-size:12px; margin-top:8px; display:inline-block;">[ View Intercept ]</a>` : ''}
+            </div>
+          `).join('')
+        : '<div style="opacity:0.5">No outgoing transmissions.</div>';
+
+      document.getElementById('modalBody').innerHTML = `
+        <div class="panel-title">${esc(call.customer_name)}</div>
+        
+        <div class="detail-group">
+          <div class="detail-label">IDENTIFIER</div>
+          <div class="detail-value">${esc(call.customer_email)} ${call.customer_phone ? ' / ' + esc(call.customer_phone) : ''}</div>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-label">STATUS</div>
+          <div class="detail-value annotation">${call.status === 'done' ? 'processed' : call.status}</div>
+        </div>
+
+        ${insights ? `
+        <div class="detail-group">
+          <div class="detail-label">AI SYNTHESIS</div>
+          <div class="detail-value" style="font-family:'Playfair Display',serif; font-size:18px; line-height:1.4;">
+            "${esc(insights.summary)}"
+          </div>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-label">DIRECTIVES</div>
+          <div class="detail-value">${actionText}</div>
+        </div>
+
+        <div class="detail-group">
+          <div class="detail-label">RAW TRANSCRIPT</div>
+          <div class="transcript-box">${esc(insights.transcript)}</div>
+        </div>
+        ` : call.status !== 'done' ? '<div class="detail-group"><div class="detail-value annotation">Synthesis in progress...</div></div>' : ''}
+
+        <div class="detail-group" style="border-bottom:none">
+          <div class="detail-label">COMMUNICATIONS</div>
+          <div class="detail-value">${msgHtml}</div>
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById('modalBody').innerHTML = `<p style="color:#ef4444">Data retrieval failed.</p>`;
+    }
+  }
+
+  function closeModal() {
+    document.getElementById('dashboardWrapper').classList.remove('shifted');
+    document.getElementById('sidePanel').classList.remove('open');
+  }
+
+  // Click outside panel to close
+  document.addEventListener('click', (e) => {
+    const panel = document.getElementById('sidePanel');
+    const isClickInside = panel.contains(e.target);
+    const isExamineBtn = e.target.classList.contains('tilted-btn');
+    if (!isClickInside && !isExamineBtn && panel.classList.contains('open')) {
+      closeModal();
+    }
+  });
+
+  function esc(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  function formatTime(ts) {
+    const d = new Date(ts);
+    return d.toISOString().split('T')[0] + ' ' + d.toTimeString().split(' ')[0];
+  }
+
+  loadData();
+  setInterval(loadData, 10000);
+</script>
+</body>
+</html>

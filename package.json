@@ -1,0 +1,35 @@
+{
+  "name": "voqstra",
+  "version": "1.0.0",
+  "description": "Smart Call Analytics & Auto-Follow-Up System",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "worker": "node --watch src/workers/callWorker.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run worker\""
+  },
+  "keywords": [
+    "voqstra",
+    "call-analytics",
+    "llm",
+    "bullmq"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@google/genai": "^2.0.1",
+    "@google/generative-ai": "^0.21.0",
+    "bullmq": "^5.51.1",
+    "concurrently": "^9.1.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^4.21.2",
+    "ioredis": "^5.6.1",
+    "multer": "^2.1.1",
+    "nodemailer": "^6.10.1",
+    "pg": "^8.14.1",
+    "uuid": "^9.0.1",
+    "winston": "^3.17.0"
+  }
+}
