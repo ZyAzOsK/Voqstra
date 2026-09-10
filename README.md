@@ -183,3 +183,106 @@ curl http://localhost:3000/api/calls/health
 ## License
 
 MIT License
+
+---
+
+## Mobile Client (React Native / Expo)
+
+A cross-platform mobile companion client for Voqstra built with **React Native (Expo SDK 57)** and **TypeScript**, designed for field agents and managers to review call insights, sentiment metrics, and queue processing statuses on the go.
+
+### Mobile Features
+
+- **Authentication & Persistence:**
+  - Branded login screen matching Voqstra's purple design system.
+  - JWT token storage via `@react-native-async-storage/async-storage` with automatic session restore on app launch.
+  - One-tap demo credential autofill (`demo@voqstra.app` / `demo123`).
+- **Call List Screen:**
+  - Real-time list matching PostgreSQL call records.
+  - Dynamic **Sentiment Badges** (Positive: green, Neutral: slate, Negative: red) with normalized sentiment scores (`-1.0` to `+1.0`).
+  - **Status Chips** (`COMPLETED`, `PROCESSING`, `FAILED`, `PENDING`).
+  - Pull-to-refresh (`RefreshControl`) and cache hydration.
+- **Call Detail Screen:**
+  - Full call metadata (duration, timestamp, customer contact details).
+  - AI analysis breakdown: sentiment score gauge, executive summary, and actionable tags.
+  - Checklist of extracted AI follow-up action items.
+  - Full audio transcript with speaker diarization (`Agent` vs `Customer`) and timestamps.
+  - BullMQ background queue live status indicator for actively processing audio jobs.
+- **Dual API Mode (Mock & Live):**
+  - Works out of the box in **Mock Mode** (`EXPO_PUBLIC_API_MODE=mock`) with realistic call datasets for demonstrations and recruiter review without requiring a running backend.
+  - Toggle to **Live Mode** (`EXPO_PUBLIC_API_MODE=live`) to connect directly to the Voqstra Express REST API.
+
+---
+
+### Mobile Tech Stack
+
+| Component | Technology |
+|---|---|
+| **Framework** | Expo SDK 57 (React Native 0.86.3) |
+| **Language** | TypeScript (Strict mode) |
+| **Navigation** | React Navigation v7 (Native Stack) |
+| **HTTP Client** | Axios (Typed with JWT bearer interceptors) |
+| **Storage** | React Native Async Storage |
+| **Safe Area** | React Native Safe Area Context |
+| **Icons & Design** | Custom Voqstra Design System |
+
+---
+
+### Mobile Directory Structure
+
+```text
+mobile/
+├── App.tsx                    # App root (SafeArea, Auth, and Navigation providers)
+├── index.ts                   # Expo root entry point
+├── .env                       # Mobile environment variables
+├── package.json               # Expo SDK 57 dependencies
+└── src/
+    ├── api/
+    │   ├── client.ts          # Axios client with request/response JWT interceptors
+    │   ├── types.ts           # TypeScript interfaces matching PostgreSQL schema
+    │   ├── calls.ts           # Typed API service (mock/live toggle)
+    │   └── mock.ts            # Realistic mock call records for standalone testing
+    ├── auth/
+    │   ├── AuthContext.tsx    # React Context for auth state & session restore
+    │   └── storage.ts         # AsyncStorage token & user persistence
+    ├── components/
+    │   ├── CallCard.tsx       # Interactive card component with sentiment/status
+    │   ├── SentimentBadge.tsx # Color-coded sentiment badge with score
+    │   └── StatusChip.tsx     # Processing status indicator chip
+    ├── navigation/
+    │   └── RootNavigator.tsx  # Native stack navigator (auth-guarded routes)
+    ├── screens/
+    │   ├── LoginScreen.tsx    # Branded login screen with demo button
+    │   ├── CallListScreen.tsx # Paginated/pull-to-refresh call list
+    │   └── CallDetailScreen.tsx # Comprehensive transcript & analysis view
+    └── theme/
+        └── colors.ts          # Voqstra purple color palette & styling tokens
+```
+
+---
+
+### Mobile Quick Start
+
+#### 1. Navigate to Mobile Directory
+```bash
+cd mobile
+```
+
+#### 2. Install Dependencies
+```bash
+npm install
+```
+
+#### 3. Start Expo Bundler
+```bash
+npx expo start -c
+```
+
+#### 4. Run on Device or Emulator
+- **Physical Device:** Open **Expo Go** on Android or iOS and scan the QR code displayed in your terminal.
+- **Android Emulator:** Press `a` in the terminal.
+- **iOS Simulator:** Press `i` in the terminal.
+
+#### 5. Demo Credentials
+Tap the **"Fill Demo Credentials"** button on the login screen, or sign in with:
+- **Email:** `demo@voqstra.app`
+- **Password:** `demo123`
