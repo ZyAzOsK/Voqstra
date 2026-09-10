@@ -5,8 +5,8 @@ uploads/
 logs/
 dist/
 .DS_Store
-.g1.txt
-.JD.txt
+g1.txt
+JD.txt
 
 # AI & Agent artifacts
 .agents/
