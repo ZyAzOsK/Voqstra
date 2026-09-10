@@ -8,6 +8,9 @@
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis)](https://redis.io)
 [![BullMQ](https://img.shields.io/badge/BullMQ-5-FF6B35)](https://bullmq.io)
 [![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)](https://docker.com)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2057-000020?logo=expo)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.86-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)](https://www.typescriptlang.org)
 
 ---
 
@@ -18,6 +21,7 @@
 3. **Analyze** with Gemini 2.5 Flash (multimodal inference — one call does transcription + AI analysis)
 4. **Store** transcript, sentiment, summary, and action items in PostgreSQL
 5. **Auto-send** a follow-up email (via Ethereal test SMTP) if the AI identifies that the call requires a follow-up
+6. **Review Insights Anywhere** via the web dashboard or the **React Native mobile client** (iOS & Android) with speaker diarization, sentiment scores, and queue tracking
 
 ---
 
@@ -44,7 +48,7 @@
 [Audio Upload]
       |
       v
-[Express API] --> [PostgreSQL: calls table]
+[Express API] <=====> [Mobile Client (Expo / React Native)]
       |
       v
 [Redis Queue] --> [BullMQ Worker]
@@ -61,6 +65,9 @@
 | Component | Technology |
 |---|---|
 | **Backend API** | Node.js + Express |
+| **Mobile Client** | React Native (Expo SDK 57) + TypeScript |
+| **Mobile Navigation** | React Navigation v7 (Native Stack) |
+| **Mobile Storage** | AsyncStorage (Persisted JWT sessions) |
 | **AI Analysis** | Google Gemini 2.5 Flash API (free tier) |
 | **Database** | PostgreSQL 16 |
 | **Job Queue** | BullMQ + Redis 7 |
@@ -70,7 +77,83 @@
 
 ---
 
-## Quick Start
+## Mobile Client (React Native / Expo)
+
+A cross-platform mobile companion client for Voqstra located in the [`mobile/`](./mobile) directory, built with **React Native (Expo SDK 57)** and **TypeScript**. Designed for field agents and managers to review call insights, sentiment metrics, and queue processing statuses on the go.
+
+### Mobile Features
+
+- **Authentication & Session Persistence:**
+  - Branded login screen matching Voqstra's purple design system.
+  - JWT token storage via `@react-native-async-storage/async-storage` with automatic session restore on app launch.
+  - One-tap demo credential autofill (`demo@voqstra.app` / `demo123`).
+- **Call List Screen:**
+  - Real-time list matching PostgreSQL call records.
+  - Dynamic **Sentiment Badges** (Positive: green, Neutral: slate, Negative: red) with normalized sentiment scores (`-1.0` to `+1.0`).
+  - **Status Chips** (`COMPLETED`, `PROCESSING`, `FAILED`, `PENDING`).
+  - Pull-to-refresh (`RefreshControl`) and cache hydration.
+- **Call Detail Screen:**
+  - Full call metadata (duration, timestamp, customer contact details).
+  - AI analysis breakdown: sentiment score gauge, executive summary, and actionable tags.
+  - Checklist of extracted AI follow-up action items.
+  - Full audio transcript with speaker diarization (`Agent` vs `Customer`) and timestamps.
+  - BullMQ background queue live status indicator for actively processing audio jobs.
+- **Dual API Mode (Mock & Live):**
+  - **Mock Mode (`EXPO_PUBLIC_API_MODE=mock`):** Works out of the box with realistic call records for instant offline testing and recruiter review without requiring the backend server to be running.
+  - **Live Mode (`EXPO_PUBLIC_API_MODE=live`):** Connects directly to the live Voqstra Express REST API.
+
+### Mobile Directory Structure
+
+```text
+mobile/
+├── App.tsx                    # App root (SafeArea, Auth, and Navigation providers)
+├── index.ts                   # Expo root entry point
+├── .env                       # Mobile environment variables
+├── package.json               # Expo SDK 57 dependencies
+└── src/
+    ├── api/
+    │   ├── client.ts          # Axios client with request/response JWT interceptors
+    │   ├── types.ts           # TypeScript interfaces matching PostgreSQL schema
+    │   ├── calls.ts           # Typed API service (mock/live toggle)
+    │   └── mock.ts            # Realistic mock call records for standalone testing
+    ├── auth/
+    │   ├── AuthContext.tsx    # React Context for auth state & session restore
+    │   └── storage.ts         # AsyncStorage token & user persistence
+    ├── components/
+    │   ├── CallCard.tsx       # Interactive card component with sentiment/status
+    │   ├── SentimentBadge.tsx # Color-coded sentiment badge with score
+    │   └── StatusChip.tsx     # Processing status indicator chip
+    ├── navigation/
+    │   └── RootNavigator.tsx  # Native stack navigator (auth-guarded routes)
+    ├── screens/
+    │   ├── LoginScreen.tsx    # Branded login screen with demo button
+    │   ├── CallListScreen.tsx # Paginated/pull-to-refresh call list
+    │   └── CallDetailScreen.tsx # Comprehensive transcript & analysis view
+    └── theme/
+        └── colors.ts          # Voqstra purple color palette & styling tokens
+```
+
+### Running the Mobile Client
+
+```bash
+# 1. Navigate to the mobile app directory
+cd mobile
+
+# 2. Install dependencies
+npm install
+
+# 3. Start Expo Bundler
+npx expo start -c
+```
+
+- **Physical Device:** Scan the QR code with **Expo Go** (Android / iOS).
+- **Android Emulator:** Press `a` in the terminal.
+- **iOS Simulator:** Press `i` in the terminal.
+- **Demo Credentials:** Tap **"Fill Demo Credentials"** or use `demo@voqstra.app` / `demo123`.
+
+---
+
+## Quick Start (Backend & Web)
 
 ### Prerequisites
 - Node.js 18+
@@ -183,106 +266,3 @@ curl http://localhost:3000/api/calls/health
 ## License
 
 MIT License
-
----
-
-## Mobile Client (React Native / Expo)
-
-A cross-platform mobile companion client for Voqstra built with **React Native (Expo SDK 57)** and **TypeScript**, designed for field agents and managers to review call insights, sentiment metrics, and queue processing statuses on the go.
-
-### Mobile Features
-
-- **Authentication & Persistence:**
-  - Branded login screen matching Voqstra's purple design system.
-  - JWT token storage via `@react-native-async-storage/async-storage` with automatic session restore on app launch.
-  - One-tap demo credential autofill (`demo@voqstra.app` / `demo123`).
-- **Call List Screen:**
-  - Real-time list matching PostgreSQL call records.
-  - Dynamic **Sentiment Badges** (Positive: green, Neutral: slate, Negative: red) with normalized sentiment scores (`-1.0` to `+1.0`).
-  - **Status Chips** (`COMPLETED`, `PROCESSING`, `FAILED`, `PENDING`).
-  - Pull-to-refresh (`RefreshControl`) and cache hydration.
-- **Call Detail Screen:**
-  - Full call metadata (duration, timestamp, customer contact details).
-  - AI analysis breakdown: sentiment score gauge, executive summary, and actionable tags.
-  - Checklist of extracted AI follow-up action items.
-  - Full audio transcript with speaker diarization (`Agent` vs `Customer`) and timestamps.
-  - BullMQ background queue live status indicator for actively processing audio jobs.
-- **Dual API Mode (Mock & Live):**
-  - Works out of the box in **Mock Mode** (`EXPO_PUBLIC_API_MODE=mock`) with realistic call datasets for demonstrations and recruiter review without requiring a running backend.
-  - Toggle to **Live Mode** (`EXPO_PUBLIC_API_MODE=live`) to connect directly to the Voqstra Express REST API.
-
----
-
-### Mobile Tech Stack
-
-| Component | Technology |
-|---|---|
-| **Framework** | Expo SDK 57 (React Native 0.86.3) |
-| **Language** | TypeScript (Strict mode) |
-| **Navigation** | React Navigation v7 (Native Stack) |
-| **HTTP Client** | Axios (Typed with JWT bearer interceptors) |
-| **Storage** | React Native Async Storage |
-| **Safe Area** | React Native Safe Area Context |
-| **Icons & Design** | Custom Voqstra Design System |
-
----
-
-### Mobile Directory Structure
-
-```text
-mobile/
-├── App.tsx                    # App root (SafeArea, Auth, and Navigation providers)
-├── index.ts                   # Expo root entry point
-├── .env                       # Mobile environment variables
-├── package.json               # Expo SDK 57 dependencies
-└── src/
-    ├── api/
-    │   ├── client.ts          # Axios client with request/response JWT interceptors
-    │   ├── types.ts           # TypeScript interfaces matching PostgreSQL schema
-    │   ├── calls.ts           # Typed API service (mock/live toggle)
-    │   └── mock.ts            # Realistic mock call records for standalone testing
-    ├── auth/
-    │   ├── AuthContext.tsx    # React Context for auth state & session restore
-    │   └── storage.ts         # AsyncStorage token & user persistence
-    ├── components/
-    │   ├── CallCard.tsx       # Interactive card component with sentiment/status
-    │   ├── SentimentBadge.tsx # Color-coded sentiment badge with score
-    │   └── StatusChip.tsx     # Processing status indicator chip
-    ├── navigation/
-    │   └── RootNavigator.tsx  # Native stack navigator (auth-guarded routes)
-    ├── screens/
-    │   ├── LoginScreen.tsx    # Branded login screen with demo button
-    │   ├── CallListScreen.tsx # Paginated/pull-to-refresh call list
-    │   └── CallDetailScreen.tsx # Comprehensive transcript & analysis view
-    └── theme/
-        └── colors.ts          # Voqstra purple color palette & styling tokens
-```
-
----
-
-### Mobile Quick Start
-
-#### 1. Navigate to Mobile Directory
-```bash
-cd mobile
-```
-
-#### 2. Install Dependencies
-```bash
-npm install
-```
-
-#### 3. Start Expo Bundler
-```bash
-npx expo start -c
-```
-
-#### 4. Run on Device or Emulator
-- **Physical Device:** Open **Expo Go** on Android or iOS and scan the QR code displayed in your terminal.
-- **Android Emulator:** Press `a` in the terminal.
-- **iOS Simulator:** Press `i` in the terminal.
-
-#### 5. Demo Credentials
-Tap the **"Fill Demo Credentials"** button on the login screen, or sign in with:
-- **Email:** `demo@voqstra.app`
-- **Password:** `demo123`
